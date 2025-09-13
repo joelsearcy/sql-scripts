@@ -53,7 +53,7 @@ Additional contributors:
 	Brian Gilbert
 	Brian Belnap
 */
-CREATE PROCEDURE DBA.hsp_ToggleSchemaBindingBatch
+CREATE PROCEDURE DBA.hsp_ToggleSchemaBinding
 (
 	@objectName SYSNAME,
 	@newIsSchemaBound BIT = NULL,
@@ -67,7 +67,7 @@ BEGIN
 	BEGIN TRY;
 		IF (@@TRANCOUNT <= 0)
 		BEGIN;
-			RAISERROR('DBA.hsp_ToggleSchemaBindingBatch must be called within the context of a transaction.', 16, 0) WITH LOG;
+			RAISERROR('DBA.hsp_ToggleSchemaBinding must be called within the context of a transaction.', 16, 0) WITH LOG;
 		END;
 
 		BEGIN TRANSACTION;
