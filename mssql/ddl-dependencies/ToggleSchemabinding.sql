@@ -53,7 +53,7 @@ Additional contributors:
 	Brian Gilbert
 	Brian Belnap
 */
-CREATE PROCEDURE DBA.usp_ToggleSchemaBinding
+CREATE PROCEDURE DBA.hsp_ToggleSchemaBindingBatch
 (
 	@objectName SYSNAME,
 	@newIsSchemaBound BIT = NULL,
@@ -67,7 +67,7 @@ BEGIN
 	BEGIN TRY;
 		IF (@@TRANCOUNT <= 0)
 		BEGIN;
-			RAISERROR('DBA.usp_ToggleSchemaBinding must be called within the context of a transaction.', 16, 0) WITH LOG;
+			RAISERROR('DBA.hsp_ToggleSchemaBindingBatch must be called within the context of a transaction.', 16, 0) WITH LOG;
 		END;
 
 		BEGIN TRANSACTION;
@@ -327,7 +327,7 @@ BEGIN
 	RETURN;
 END;
 GO
-CREATE PROCEDURE [DBA].[usp_ToggleSchemaBindingBatch]
+CREATE PROCEDURE [DBA].[hsp_ToggleSchemaBindingBatch]
 (
 	@objectList NVARCHAR(MAX),
 	@mode VARCHAR(20),
@@ -699,7 +699,7 @@ GO';
 					),
 					CONCAT
 					(
-						'DBA.usp_ToggleSchemaBinding',
+						'DBA.hsp_ToggleSchemaBindingBatch',
 						IIF(Computed.isIndexedView = 1, ' /*Indexed Vew - WARNING: All indexes on this view will be dropped!*/', ''),
 						' @objectName = '
 					)
@@ -1260,7 +1260,7 @@ GO
 
 /*
 build toggle statements:
-EXEC DBA.usp_ToggleSchemaBindingBatch
+EXEC DBA.hsp_ToggleSchemaBindingBatchBatch
 	@objectList = 'Foo.Bar',
 	@mode = NULL,
 	@onlyIncludeDirectDependencies = 0,
