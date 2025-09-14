@@ -2,3 +2,8 @@ unpublished/
 docker/
 
 .env
+.env.test
+
+data/
+logs/
+test-results/
