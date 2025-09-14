@@ -271,7 +271,7 @@ BEGIN
 			SET @definition = STUFF(@definition, @offsetOfWithStatement, 0, @withStatement);
 		END;
 
-		/* debuging output */
+		/* debugging output */
 		IF (@ifDebug = 1)
 		BEGIN;
 			PRINT REPLICATE(N'-', 20);
@@ -1270,8 +1270,19 @@ EXEC DBA.hsp_ToggleSchemaBindingBatchBatch
 	@rebindSql = NULL;
 */
 
-PRINT 'ROLLBACK'; ROLLBACK TRANSACTION;
---PRINT 'COMMIT'; COMMIT WORK;
+
+GO
+IF (@@ERROR <> 0 OR @@TRANCOUNT <= 0)
+BEGIN
+	RAISERROR('SCHEMA CHANGE FAILED!', 18, 0);
+	IF (@@TRANCOUNT > 0) ROLLBACK TRANSACTION;
+	SET NOEXEC ON;
+	RETURN;
+END;
+GO
+
+-- PRINT 'ROLLBACK'; ROLLBACK TRANSACTION;
+PRINT 'COMMIT'; COMMIT WORK;
 /*
 
 */
