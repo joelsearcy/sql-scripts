@@ -67,7 +67,7 @@ BEGIN
 	BEGIN TRY;
 		IF (@@TRANCOUNT <= 0)
 		BEGIN;
-			RAISERROR('DBA.hsp_ToggleSchemaBinding must be called within the context of a transaction.', 16, 0) WITH LOG;
+			RAISERROR('DBA.hsp_ToggleSchemaBinding must be called within the context of a transaction.', 16, 0);
 		END;
 
 		BEGIN TRANSACTION;
@@ -83,7 +83,7 @@ BEGIN
 
 		IF (@objectId IS NULL)
 		BEGIN;
-			RAISERROR(N'No object found with name ''%s''.', 16, 1, @objectName) WITH LOG;
+			RAISERROR(N'No object found with name ''%s''.', 16, 1, @objectName);
 		END;
 
 		/* Get the object's type. */
@@ -95,7 +95,7 @@ BEGIN
 
 		IF (@type NOT IN ('FN','TF','IF','V'))
 		BEGIN;
-			RAISERROR(N'Object type ''%s'' is not supported (''FN'',''TF'',''IF'',''V'').)', 16, 1, @type) WITH LOG;
+			RAISERROR(N'Object type ''%s'' is not supported (''FN'',''TF'',''IF'',''V'').)', 16, 1, @type);
 		END;
 
 		SET @searchString =
@@ -126,7 +126,7 @@ BEGIN
 
 		IF (@definition IS NULL)
 		BEGIN;
-			RAISERROR(N'No definition found for object ''%s''.', 16, 1, @objectName) WITH LOG;
+			RAISERROR(N'No definition found for object ''%s''.', 16, 1, @objectName);
 		END;
 
 		/* Set the new isSchemaBound to the inverse of the current state, if no desired state was set. */
@@ -138,18 +138,18 @@ BEGIN
 
 			IF (@enforceStrictChanges = 1)
 			BEGIN;
-				RAISERROR(@errorMessage, 16, 1) WITH LOG;
+				RAISERROR(@errorMessage, 16, 1);
 			END;
 			ELSE
 			BEGIN;
 				SET @errorMessage = N'WARNING: ' + @errorMessage;
-				RAISERROR(@errorMessage, 10, 1) WITH LOG;
+				RAISERROR(@errorMessage, 10, 1);
 			END;
 		END;
 
 		IF (@offset IS NULL OR @offset = 0)
 		BEGIN;
-			RAISERROR(N'Could not find CREATE statement in object definition.', 16, 1) WITH LOG;
+			RAISERROR(N'Could not find CREATE statement in object definition.', 16, 1);
 		END;
 
 		SET @header = SUBSTRING(@definition, 1, @offset - 1);
@@ -290,7 +290,7 @@ BEGIN
 		/* Verify that we have something to run... */
 		IF (@definition IS NULL)
 		BEGIN;
-			RAISERROR(N'Definition of object ''%s'' not in expected format.', 16, 1, @objectName) WITH LOG;
+			RAISERROR(N'Definition of object ''%s'' not in expected format.', 16, 1, @objectName);
 		END;
 
 		/* Run the ALTER statement */
@@ -309,7 +309,7 @@ BEGIN
 				AND sql_modules.is_schema_bound = @newIsSchemaBound
 		)
 		BEGIN;
-			RAISERROR (N'Alter failed to change the schemabinding for object ''%s''.', 16, 1, @objectName) WITH LOG;
+			RAISERROR (N'Alter failed to change the schemabinding for object ''%s''.', 16, 1, @objectName);
 		END;
 
 		COMMIT WORK;
