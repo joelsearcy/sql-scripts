@@ -1,0 +1,107 @@
+networks:
+  sqlserver-test-network:
+    driver: bridge
+
+services:
+  sqlserver-2019:
+    image: ${SQL_2019_IMAGE}
+    container_name: ${SQL_2019_CONTAINER}
+    hostname: sqlserver-2019
+    user: "0:0"  # Run as root to avoid permission issues with mounted volumes
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${SA_PASSWORD}
+      - MSSQL_PID=Developer
+      - MSSQL_AGENT_ENABLED=true
+      - MSSQL_ENABLE_HADR=1
+      - MSSQL_RUN_AS_ROOT=1  # Explicitly allow running as root
+    ports:
+      - "1419:1433"
+    volumes:
+      - ./data/sql2019:/var/opt/mssql/data:rw
+      - ./logs/sql2019:/var/opt/mssql/log:rw
+      - ./test-results:/test-results:rw
+      - ${SCRIPTS_PATH}:/scripts:ro
+    networks:
+      - sqlserver-test-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P '${SA_PASSWORD}' -C -Q 'SELECT 1' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  sqlserver-2022:
+    image: ${SQL_2022_IMAGE}
+    container_name: ${SQL_2022_CONTAINER}
+    hostname: sqlserver-2022
+    user: "0:0"  # Run as root to avoid permission issues with mounted volumes
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${SA_PASSWORD}
+      - MSSQL_PID=Developer
+      - MSSQL_AGENT_ENABLED=true
+      - MSSQL_ENABLE_HADR=1
+      - MSSQL_RUN_AS_ROOT=1  # Explicitly allow running as root
+    ports:
+      - "1422:1433"
+    volumes:
+      - ./data/sql2022:/var/opt/mssql/data:rw
+      - ./logs/sql2022:/var/opt/mssql/log:rw
+      - ./test-results:/test-results:rw
+      - ${SCRIPTS_PATH}:/scripts:ro
+    networks:
+      - sqlserver-test-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P '${SA_PASSWORD}' -C -Q 'SELECT 1' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  sqlserver-2025:
+    image: ${SQL_2025_IMAGE}
+    container_name: ${SQL_2025_CONTAINER}
+    hostname: sqlserver-2025
+    user: "0:0"  # Run as root to avoid permission issues with mounted volumes
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${SA_PASSWORD}
+      - MSSQL_PID=Developer
+      - MSSQL_AGENT_ENABLED=true
+      - MSSQL_ENABLE_HADR=1
+      - MSSQL_RUN_AS_ROOT=1  # Explicitly allow running as root
+    ports:
+      - "1425:1433"
+    volumes:
+      - ./data/sql2025:/var/opt/mssql/data:rw
+      - ./logs/sql2025:/var/opt/mssql/log:rw
+      - ./test-results:/test-results:rw
+      - ${SCRIPTS_PATH}:/scripts:ro
+    networks:
+      - sqlserver-test-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P '${SA_PASSWORD}' -C -Q 'SELECT 1' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # SQL Server client container for running tests
+  sqlserver-client:
+    image: ${SQL_2022_IMAGE}
+    container_name: sqlserver-test-client
+    hostname: test-client
+    environment:
+      - ACCEPT_EULA=Y
+    volumes:
+      - ${SCRIPTS_PATH}:/scripts:rw
+      - ./test-results:/test-results:rw
+    networks:
+      - sqlserver-test-network
+    command: sleep infinity
+    restart: unless-stopped
+

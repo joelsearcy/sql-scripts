@@ -330,12 +330,12 @@ GO
 CREATE PROCEDURE [DBA].[hsp_ToggleSchemaBindingBatch]
 (
 	@objectList NVARCHAR(MAX),
-	@mode VARCHAR(20),
+	@mode VARCHAR(20) = 'PRINT',
 	@onlyIncludeDirectDependencies BIT = 0,
 	@scriptOutObjectAlterStatements BIT = 0,
 	@isSchemaBoundOnly BIT = 0,	-- only process dependencies that are schema-bound
-	@unbindSql NVARCHAR(MAX) OUTPUT,
-	@rebindSql NVARCHAR(MAX) OUTPUT
+	@unbindSql NVARCHAR(MAX) = NULL OUTPUT,
+	@rebindSql NVARCHAR(MAX) = NULL OUTPUT
 )
 AS
 BEGIN
@@ -699,7 +699,7 @@ GO';
 					),
 					CONCAT
 					(
-						'DBA.hsp_ToggleSchemaBindingBatch',
+						'DBA.hsp_ToggleSchemaBinding',
 						IIF(Computed.isIndexedView = 1, ' /*Indexed Vew - WARNING: All indexes on this view will be dropped!*/', ''),
 						' @objectName = '
 					)
@@ -1260,14 +1260,8 @@ GO
 
 /*
 build toggle statements:
-EXEC DBA.hsp_ToggleSchemaBindingBatchBatch
-	@objectList = 'Foo.Bar',
-	@mode = NULL,
-	@onlyIncludeDirectDependencies = 0,
-	@scriptOutObjectAlterStatements = 0,
-	@isSchemaBoundOnly = 0,
-	@unbindSql = NULL,
-	@rebindSql = NULL;
+EXEC [DBA].[hsp_ToggleSchemaBindingBatch]
+	@objectList = N'Foo.Bar';
 */
 
 
