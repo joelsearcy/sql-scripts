@@ -336,8 +336,7 @@ Based on benchmark testing in [`benches/`](benches/):
 - Handles @@DATEFIRST variations automatically
 - Single function call returns all common formats
 
-**Schedule functions vs. application logic:**
-- 100x+ faster than cursor-based date generation
+**Optimized date schedule functions:**
+- 100x+ faster than cursor-based or recurse-CTE date generation 
 - Eliminates complex WHILE loops in stored procedures
 - Set-based operations optimize for large date ranges
-```
