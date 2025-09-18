@@ -1,4 +1,4 @@
-# Flattening & Differencing SQL Date Intervals
+# SQL Date Interval Set Operations
 
 ## Some Background
 
