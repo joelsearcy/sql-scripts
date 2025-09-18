@@ -4,7 +4,7 @@
 
 Algorithms for finding intervals are sometimes referred to as *Packing Intervals* or *Gaps and Islands* problems. However, in code solutions and functional programming this is more often referred to as merging or flattening the intervals.
 
-## Flattening & Differencing: an Optimization Story
+## Flattening, Differencing, & Intersecting: an Optimization Story
 
 I worked on a system that calculated date intervals for qualification and eligibility for almost a decade before I learned the term *Gaps and Islands*. During that time I'd already iterated through a few different solutions in T-SQL, particulary spurred on by the need to improve the performance of these queries as the system scaled to handing over a million accounts, each with potentially dozens of intervals.
 
