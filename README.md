@@ -15,14 +15,14 @@ A collection of SQL Server scripts, tools, and utilities for database administra
 
 ### Database Schema Migrations
 
-- **[Toggle Schemabinding Guide](mssql/ddl-dependencies/README.md)** - How to reduce the scope of database change scripts while getting the benefits of enabling SCHEMABINDING by using `DBA.hsp_ToggleSchemabinding`
-- **[Toggle Schemabinding Testing Guide](mssql/ddl-dependencies/testing/README.md)** - Comprehensive Docker testing framework for `DBA.hsp_ToggleSchemabinding`
+- **[Toggle Schemabinding Procedures](mssql/ddl-dependencies/)** - How to reduce the scope of database change scripts while getting the benefits of enabling SCHEMABINDING by using `DBA.hsp_ToggleSchemabinding`
+- **[Toggle Schemabinding Testing](mssql/ddl-dependencies/testing/)** - Comprehensive Docker testing framework for `DBA.hsp_ToggleSchemabinding`
 - **[Development Helper Scripts](mssql/helper-scripts/)** - misc. template scripts and queries to script out objects from the database
 
 ### Design Patterns and Advanced T-SQL Examples
 
-- **[Date Intervals](mssql/sql-date-interval/README.md)** - Flattening/Merging, Differencing, and Intersecting of date intervals
-- **[Calendar Scheduling](mssql/sql-calendar/README.md)** - Advanced date scheduling utility functions
+- **[Date Intervals](mssql/sql-date-interval/)** - Flattening/Merging, Differencing, and Intersecting of date intervals
+- **[Calendar Scheduling](mssql/sql-calendar/)** - Advanced date scheduling utility functions
 - **[Temporal Tables](mssql/temporal-tables/)** - temporal table examples, both custom and system-versioned
 
 ### Performance Monitoring
