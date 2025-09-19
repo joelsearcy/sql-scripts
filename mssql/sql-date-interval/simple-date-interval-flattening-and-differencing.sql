@@ -104,7 +104,8 @@ FROM
 					PARTITION BY
 						Interval.customerId
 					ORDER BY
-						Interval.boundaryValue
+						Interval.boundaryValue,
+						Interval.negativeBoundaryType
 				) - 1) / 2) + 1
 			) AS groupingId
 		FROM
@@ -120,7 +121,7 @@ FROM
                             IntervalBoundary.customerId
                         ORDER BY
                             IntervalBoundary.boundaryValue,
-                            IntervalBoundary.negativeBoundaryType DESC,
+                            IntervalBoundary.negativeBoundaryType,
                             IntervalBoundary.boundaryType DESC
                         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
                     ) - IntervalBoundary.offset AS overlapCount,
@@ -130,14 +131,14 @@ FROM
 							IntervalBoundary.customerId
 						ORDER BY
 							IntervalBoundary.boundaryValue,
-							IntervalBoundary.negativeBoundaryType DESC,
+							IntervalBoundary.negativeBoundaryType,
 							IntervalBoundary.boundaryType DESC
 						ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
 					) - IntervalBoundary.negativeOffset AS negativeOverlapCount
 				FROM
 					(
 						SELECT
-							InclusionPeriod.customerId,
+							DatePeriod.customerId,
 							IntervalBoundary.boundaryType,
 							IntervalBoundary.offset,
 							IntervalBoundary.negativeBoundaryType,
@@ -145,20 +146,20 @@ FROM
 							IntervalBoundary.boundaryValue,
 							IntervalBoundary.boundaryValueOffset
 						FROM
-							dbo.DatePeriod AS InclusionPeriod
+							dbo.DatePeriod AS DatePeriod
 							OUTER APPLY
 							(VALUES
 								-- Shift start dates back a day in order to detect adjacent intervals, and to treat all dates the same.
 								-- For positive start dates, apply an offset of 1 so that a start date doesn't count against itself in the running aggregate check.
-								(+1, 1, 0, 0, 1, DATEADD(DAY, -1, InclusionPeriod.startDate)),
-								(-1, 0, 0, 0, 0, InclusionPeriod.endDate)
+								(+1, 1, 0, 0, 1, DATEADD(DAY, -1, DatePeriod.startDate)),
+								(-1, 0, 0, 0, 0, DatePeriod.endDate)
 							) AS IntervalBoundary
 								(boundaryType, offset, negativeBoundaryType, negativeOffset, boundaryValueOffset, boundaryValue)
 
 						UNION ALL
 
 						SELECT
-							ExcludedDatePeriod.customerId,
+							DatePeriod.customerId,
 							IntervalBoundary.boundaryType,
 							IntervalBoundary.offset,
 							IntervalBoundary.negativeBoundaryType,
@@ -166,13 +167,14 @@ FROM
 							IntervalBoundary.boundaryValue,
 							IntervalBoundary.boundaryValueOffset
 						FROM
-							dbo.ExcludedDatePeriod
+							dbo.ExcludedDatePeriod AS DatePeriod
 							OUTER APPLY
 							(VALUES
-								-- Shift start dates back a day in order to detect adjacent intervals, and to treat all dates the same.
-								-- For negative start dates, do not apply an offset.
-								(+2, +2, +1, 1, 0, DATEADD(DAY, -1, ExcludedDatePeriod.startDate)),
-								(-2,  0, -1, 0, 1, ExcludedDatePeriod.endDate)
+								-- For excluded intervals, leave the start date as-is to avoid conflicts with inclusion end dates.
+								-- Instead, shift the end date forward a day to detect adjacent intervals.
+								-- In the final output, the start date will be adjusted to an end date.
+								(+2, +2, +1, 1, -1, DatePeriod.startDate),
+								(-2,  0, -1, 0,  0, DATEADD(DAY, IIF(DATEFROMPARTS(9999, 12, 31) = DatePeriod.endDate, 0, 1), DatePeriod.endDate))
 							) AS IntervalBoundary
 								(boundaryType, offset, negativeBoundaryType, negativeOffset, boundaryValueOffset, boundaryValue)
 					) AS IntervalBoundary
@@ -242,7 +244,8 @@ RETURN
 						PARTITION BY
 							Interval.partitionId
 						ORDER BY
-							Interval.boundaryValue
+							Interval.boundaryValue,
+							Interval.negativeBoundaryType
 					) - 1) / 2) + 1
 				) AS groupingId
 			FROM
@@ -258,7 +261,7 @@ RETURN
 							IntervalBoundary.partitionId
 						ORDER BY
 							IntervalBoundary.boundaryValue,
-							IntervalBoundary.negativeBoundaryType DESC,
+							IntervalBoundary.negativeBoundaryType,
 							IntervalBoundary.boundaryType DESC
 						ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
 					) - IntervalBoundary.offset AS overlapCount,
@@ -268,14 +271,14 @@ RETURN
 							IntervalBoundary.partitionId
 						ORDER BY
 							IntervalBoundary.boundaryValue,
-							IntervalBoundary.negativeBoundaryType DESC,
+							IntervalBoundary.negativeBoundaryType,
 							IntervalBoundary.boundaryType DESC
 						ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
 					) - IntervalBoundary.negativeOffset AS negativeOverlapCount
 				FROM
 					(
 						SELECT
-							InclusionPeriod.partitionId,
+							DatePeriod.partitionId,
 							IntervalBoundary.boundaryType,
 							IntervalBoundary.offset,
 							IntervalBoundary.negativeBoundaryType,
@@ -283,20 +286,20 @@ RETURN
 							IntervalBoundary.boundaryValue,
 							IntervalBoundary.boundaryValueOffset
 						FROM
-							@DatePeriod AS InclusionPeriod
+							@DatePeriod AS DatePeriod
 							OUTER APPLY
 							(VALUES
 								-- Shift start dates back a day in order to detect adjacent intervals, and to treat all dates the same.
 								-- For positive start dates, apply an offset of 1 so that a start date doesn't count against itself in the running aggregate check.
-								(+1, 1, 0, 0, 1, DATEADD(DAY, -1, InclusionPeriod.startDate)),
-								(-1, 0, 0, 0, 0, InclusionPeriod.endDate)
+								(+1, 1, 0, 0, 1, DATEADD(DAY, -1, DatePeriod.startDate)),
+								(-1, 0, 0, 0, 0, DatePeriod.endDate)
 							) AS IntervalBoundary
 								(boundaryType, offset, negativeBoundaryType, negativeOffset, boundaryValueOffset, boundaryValue)
 
 						UNION ALL
 
 						SELECT
-							ExclusionPeriod.partitionId,
+							DatePeriod.partitionId,
 							IntervalBoundary.boundaryType,
 							IntervalBoundary.offset,
 							IntervalBoundary.negativeBoundaryType,
@@ -304,13 +307,14 @@ RETURN
 							IntervalBoundary.boundaryValue,
 							IntervalBoundary.boundaryValueOffset
 						FROM
-							@ExcludedDatePeriod AS ExclusionPeriod
+							@ExcludedDatePeriod AS DatePeriod
 							OUTER APPLY
 							(VALUES
-								-- Shift start dates back a day in order to detect adjacent intervals, and to treat all dates the same.
-								-- For negative start dates, do not apply an offset.
-								(+2, +2, +1, 1, 0, DATEADD(DAY, -1, ExclusionPeriod.startDate)),
-								(-2,  0, -1, 0, 1, ExclusionPeriod.endDate)
+								-- For excluded intervals, leave the start date as-is to avoid conflicts with inclusion end dates.
+								-- Instead, shift the end date forward a day to detect adjacent intervals.
+								-- In the final output, the start date will be adjusted to an end date.
+								(+2, +2, +1, 1, -1, DatePeriod.startDate),
+								(-2,  0, -1, 0,  0, DATEADD(DAY, IIF(DATEFROMPARTS(9999, 12, 31) = DatePeriod.endDate, 0, 1), DatePeriod.endDate))
 							) AS IntervalBoundary
 								(boundaryType, offset, negativeBoundaryType, negativeOffset, boundaryValueOffset, boundaryValue)
 					) AS IntervalBoundary
@@ -350,7 +354,8 @@ VALUES
 	(1, '2021-01-02', '2021-03-31'),
 	(1, '2020-01-01', '2020-12-31'),
 	(1, '2021-01-01', '2022-12-31'),
-	(1, '2025-01-01', '2025-12-31');
+	(1, '2025-01-01', '2025-12-31'),
+	(2, '2020-01-01', '2020-01-01');
 
 DECLARE @DatePeriod dbo.tvp_DatePeriod;
 INSERT INTO @DatePeriod (partitionId, startDate, endDate)
@@ -367,7 +372,8 @@ VALUES
 	(1, '2021-01-01', '2021-03-31'),
 	(1, '2023-01-01', '2023-12-31'),
 	(1, '2027-01-01', '2027-12-31'),
-	(1, '2022-01-01', '2022-01-31');
+	(1, '2022-01-01', '2022-01-31'),
+	(2, '2019-01-01', '2019-12-31');
 
 DECLARE @ExcludedDatePeriod dbo.tvp_DatePeriod;
 INSERT INTO @ExcludedDatePeriod (partitionId, startDate, endDate)

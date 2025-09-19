@@ -139,7 +139,8 @@ FROM
                     PARTITION BY
                         Interval.customerId
                     ORDER BY
-                        Interval.boundaryValue
+                        Interval.boundaryValue,
+						Interval.negativeBoundaryType
                 ) AS startDate,
 			DATEADD
 			(
@@ -154,7 +155,8 @@ FROM
 					PARTITION BY
 						Interval.customerId
 					ORDER BY
-						Interval.boundaryValue
+						Interval.boundaryValue,
+						Interval.negativeBoundaryType
 				) - 1) % 2) + 1
 			) AS groupingId
 		FROM
@@ -172,7 +174,7 @@ FROM
                             IntervalBoundary.customerId
                         ORDER BY
                             IntervalBoundary.boundaryValue,
-                            IntervalBoundary.negativeBoundaryType DESC,
+                            IntervalBoundary.negativeBoundaryType,
                             IntervalBoundary.boundaryType DESC,
 							IntervalBoundary.dateReasonPrecedenceOrder
                         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
@@ -183,7 +185,7 @@ FROM
 							IntervalBoundary.customerId
 						ORDER BY
 							IntervalBoundary.boundaryValue,
-							IntervalBoundary.negativeBoundaryType DESC,
+							IntervalBoundary.negativeBoundaryType,
 							IntervalBoundary.boundaryType DESC,
 							IntervalBoundary.dateReasonPrecedenceOrder
 						ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
@@ -191,8 +193,8 @@ FROM
 				FROM
 					(
 						SELECT
-							InclusionPeriod.customerId,
-							InclusionPeriod.endDateReasonId,
+							DatePeriod.customerId,
+							DatePeriod.endDateReasonId,
                             IntervalBoundary.dateReasonPrecedenceOrder,
 							IntervalBoundary.boundaryType,
 							IntervalBoundary.offset,
@@ -201,15 +203,15 @@ FROM
 							IntervalBoundary.boundaryValue,
 							IntervalBoundary.boundaryValueOffset
 						FROM
-							dbo.DatePeriod AS InclusionPeriod
+							dbo.DatePeriod AS DatePeriod
                             INNER JOIN dbo.DateReason
-                                ON InclusionPeriod.endDateReasonId = DateReason.dateReasonId
+                                ON DatePeriod.endDateReasonId = DateReason.dateReasonId
 							OUTER APPLY
 							(VALUES
 								-- Shift start dates back a day in order to detect adjacent intervals, and to treat all dates the same.
 								-- For positive start dates, apply an offset of 1 so that a start date doesn't count against itself in the running aggregate check.
-								(+1, 1, 0, 0, 1, DATEADD(DAY, -1, InclusionPeriod.startDate), 0),
-								(-1, 0, 0, 0, 0, InclusionPeriod.endDate, DateReason.precedenceOrder)
+								(+1, 1, 0, 0, 1, DATEADD(DAY, -1, DatePeriod.startDate), 0),
+								(-1, 0, 0, 0, 0, DatePeriod.endDate, DateReason.precedenceOrder)
 							) AS IntervalBoundary
 								(boundaryType, offset, negativeBoundaryType, negativeOffset, boundaryValueOffset, boundaryValue, dateReasonPrecedenceOrder)
                             
@@ -217,8 +219,8 @@ FROM
 						UNION ALL
 
 						SELECT
-							ExcludedDatePeriod.customerId,
-							ExcludedDatePeriod.exclusionReasonId AS endDateReasonId,
+							DatePeriod.customerId,
+							DatePeriod.exclusionReasonId AS endDateReasonId,
                             IntervalBoundary.dateReasonPrecedenceOrder,
 							IntervalBoundary.boundaryType,
 							IntervalBoundary.offset,
@@ -227,16 +229,16 @@ FROM
 							IntervalBoundary.boundaryValue,
 							IntervalBoundary.boundaryValueOffset
 						FROM
-							dbo.ExcludedDatePeriod
+							dbo.ExcludedDatePeriod AS DatePeriod
                             INNER JOIN dbo.DateReason
-                                ON ExcludedDatePeriod.exclusionReasonId = DateReason.dateReasonId
+                                ON DatePeriod.exclusionReasonId = DateReason.dateReasonId
 							OUTER APPLY
 							(VALUES
 								-- For excluded intervals, leave the start date as-is to avoid conflicts with inclusion end dates.
 								-- Instead, shift the end date forward a day to detect adjacent intervals.
 								-- In the final output, the start date will be adjusted to an end date.
-								(+2, +2, +1, 1, -1, ExcludedDatePeriod.startDate, DateReason.precedenceOrder),
-								(-2,  0, -1, 0,  0, DATEADD(DAY, IIF(DATEFROMPARTS(9999, 12, 31) = ExcludedDatePeriod.endDate, 0, 1), ExcludedDatePeriod.endDate), 0)
+								(+2, +2, +1, 1, -1, DatePeriod.startDate, DateReason.precedenceOrder),
+								(-2,  0, -1, 0,  0, DATEADD(DAY, IIF(DATEFROMPARTS(9999, 12, 31) = DatePeriod.endDate, 0, 1), DatePeriod.endDate), 0)
 							) AS IntervalBoundary
 								(boundaryType, offset, negativeBoundaryType, negativeOffset, boundaryValueOffset, boundaryValue, dateReasonPrecedenceOrder)
 					) AS IntervalBoundary
@@ -315,7 +317,8 @@ RETURN
 						PARTITION BY
 							Interval.partitionId
 						ORDER BY
-							Interval.boundaryValue
+							Interval.boundaryValue,
+							Interval.negativeBoundaryType
 					) AS startDate,
 				DATEADD
 				(
@@ -330,7 +333,8 @@ RETURN
 						PARTITION BY
 							Interval.partitionId
 						ORDER BY
-							Interval.boundaryValue
+							Interval.boundaryValue,
+							Interval.negativeBoundaryType
 					) - 1) % 2) + 1
 				) AS groupingId
 			FROM
@@ -348,7 +352,7 @@ RETURN
 								IntervalBoundary.partitionId
 							ORDER BY
 								IntervalBoundary.boundaryValue,
-								IntervalBoundary.negativeBoundaryType DESC,
+								IntervalBoundary.negativeBoundaryType,
 								IntervalBoundary.boundaryType DESC,
 								IntervalBoundary.dateReasonPrecedenceOrder
 							ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
@@ -359,7 +363,7 @@ RETURN
 								IntervalBoundary.partitionId
 							ORDER BY
 								IntervalBoundary.boundaryValue,
-								IntervalBoundary.negativeBoundaryType DESC,
+								IntervalBoundary.negativeBoundaryType,
 								IntervalBoundary.boundaryType DESC,
 								IntervalBoundary.dateReasonPrecedenceOrder
 							ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
@@ -367,8 +371,8 @@ RETURN
 					FROM
 						(
 							SELECT
-								InclusionPeriod.partitionId,
-								InclusionPeriod.dateReasonId AS endDateReasonId,
+								DatePeriod.partitionId,
+								DatePeriod.dateReasonId AS endDateReasonId,
 								IntervalBoundary.dateReasonPrecedenceOrder,
 								IntervalBoundary.boundaryType,
 								IntervalBoundary.offset,
@@ -377,15 +381,15 @@ RETURN
 								IntervalBoundary.boundaryValue,
 								IntervalBoundary.boundaryValueOffset
 							FROM
-								@DatePeriod AS InclusionPeriod
+								@DatePeriod AS DatePeriod
 								INNER JOIN dbo.DateReason
-									ON InclusionPeriod.dateReasonId = DateReason.dateReasonId
+									ON DatePeriod.dateReasonId = DateReason.dateReasonId
 								OUTER APPLY
 								(VALUES
 									-- Shift start dates back a day in order to detect adjacent intervals, and to treat all dates the same.
 									-- For positive start dates, apply an offset of 1 so that a start date doesn't count against itself in the running aggregate check.
-									(+1, 1, 0, 0, 1, DATEADD(DAY, -1, InclusionPeriod.startDate), 0),
-									(-1, 0, 0, 0, 0, InclusionPeriod.endDate, DateReason.precedenceOrder)
+									(+1, 1, 0, 0, 1, DATEADD(DAY, -1, DatePeriod.startDate), 0),
+									(-1, 0, 0, 0, 0, DatePeriod.endDate, DateReason.precedenceOrder)
 								) AS IntervalBoundary
 									(boundaryType, offset, negativeBoundaryType, negativeOffset, boundaryValueOffset, boundaryValue, dateReasonPrecedenceOrder)
                             
@@ -393,8 +397,8 @@ RETURN
 							UNION ALL
 
 							SELECT
-								ExcludedDatePeriod.partitionId,
-								ExcludedDatePeriod.dateReasonId AS endDateReasonId,
+								DatePeriod.partitionId,
+								DatePeriod.dateReasonId AS endDateReasonId,
 								IntervalBoundary.dateReasonPrecedenceOrder,
 								IntervalBoundary.boundaryType,
 								IntervalBoundary.offset,
@@ -403,16 +407,16 @@ RETURN
 								IntervalBoundary.boundaryValue,
 								IntervalBoundary.boundaryValueOffset
 							FROM
-								@ExcludedDatePeriod AS ExcludedDatePeriod
+								@ExcludedDatePeriod AS DatePeriod
 								INNER JOIN dbo.DateReason
-									ON ExcludedDatePeriod.dateReasonId = DateReason.dateReasonId
+									ON DatePeriod.dateReasonId = DateReason.dateReasonId
 								OUTER APPLY
 								(VALUES
 									-- For excluded intervals, leave the start date as-is to avoid conflicts with inclusion end dates.
 									-- Instead, shift the end date forward a day to detect adjacent intervals.
 									-- In the final output, the start date will be adjusted to an end date.
-									(+2, +2, +1, 1, -1, ExcludedDatePeriod.startDate, DateReason.precedenceOrder),
-									(-2,  0, -1, 0,  0, DATEADD(DAY, IIF(DATEFROMPARTS(9999, 12, 31) = ExcludedDatePeriod.endDate, 0, 1), ExcludedDatePeriod.endDate), 0)
+									(+2, +2, +1, 1, -1, DatePeriod.startDate, DateReason.precedenceOrder),
+									(-2,  0, -1, 0,  0, DATEADD(DAY, IIF(DATEFROMPARTS(9999, 12, 31) = DatePeriod.endDate, 0, 1), DatePeriod.endDate), 0)
 								) AS IntervalBoundary
 									(boundaryType, offset, negativeBoundaryType, negativeOffset, boundaryValueOffset, boundaryValue, dateReasonPrecedenceOrder)
 						) AS IntervalBoundary
@@ -453,7 +457,8 @@ VALUES
 	(1, '2020-04-01', '2020-05-31', 4),
 	(1, '2021-06-01', '2023-12-31', 3),
 	(1, '2024-07-01', '2025-07-30', 4),
-	(1, '2027-01-01', '2027-12-31', 1);
+	(1, '2027-01-01', '2027-12-31', 1),
+	(2, '2020-01-01', '2020-01-01', 1);
 
 DECLARE @DatePeriod dbo.tvp_DatePeriodWithDateReason;
 INSERT INTO @DatePeriod (partitionId, startDate, endDate, dateReasonId)
@@ -472,7 +477,8 @@ VALUES
 	(1, '2024-01-01', '2024-12-31', 10),
 	(1, '2025-01-01', '2025-12-31', 10),
 	(1, '2026-01-01', '2026-12-31', 11),
-	(1, '2028-01-01', '2030-12-31', 10);
+	(1, '2028-01-01', '2030-12-31', 10),
+	(2, '2019-01-01', '2019-12-31', 11);
 
 DECLARE @ExcludedDatePeriod dbo.tvp_DatePeriodWithDateReason;
 INSERT INTO @ExcludedDatePeriod (partitionId, startDate, endDate, dateReasonId)
