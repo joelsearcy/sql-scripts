@@ -49,5 +49,14 @@ Here are some of the resources that influenced my approach, including some newer
   - Includes newer T-SQL language features, such as `GENERATE_SERIES`.
   - *I haven't read through the whole thing yet, but it looks interesting.*
 
+I've been informed that this approach is similar to a Static Relational Interval Tree (aka Static RI-Tree, SRIT). As such, for completeness and transparency, here are some additional links if you would like to read further and compare approaches:
+
+- [Managing Intervals Efficiently in Object-Relational Databases](https://www.dbs.ifi.lmu.de/Publikationen/Papers/VLDB2000.pdf) by Hans-Peter Kriegel, Marco Pötke, Thomas Seidl, VLDB 2000
+  - Also available on [vldb.org](https://www.vldb.org/conf/2000/P407.pdf).
+- [Additional Intervals whitepapers and articles](https://itziktsql.com/r-whitepapers-%2F-articles) by Itzik Ben-Gan and Laurent Martin
+  - Laurent Martin's articles reference Hans-Peter Kriegel, Marco Pötke, Thomas Seidl's paper
+- [Efficiently Processing Queries on Interval-and-Value Tuples in Relational Databases](https://www.researchgate.net/publication/221310875_Efficiently_Processing_Queries_on_Interval-and-Value_Tuples_in_Relational_Databases) by Jost Enderle, Nicole Schneider, Thomas Seidl, VLDB 2005
+- [Interval tree](https://en.wikipedia.org/wiki/Interval_tree) on Wikipedia
+
 ---
 &copy; 2025 Joel Searcy. All rights reserved.
